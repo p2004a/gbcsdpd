@@ -1,0 +1,29 @@
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier", "buildifier_test")
+load("@io_bazel_rules_go//go:def.bzl", "nogo")
+
+# gazelle:prefix github.com/p2004a/gbcsdpd
+gazelle(name = "gazelle")
+
+buildifier(name = "buildifier")
+
+buildifier(
+    name = "buildifier_check",
+    mode = "check",
+)
+
+buildifier_test(
+    name = "buildifier_check_test",
+    srcs = ["WORKSPACE"] + glob([
+        "**/*.bazel",
+        "**/*.bzl",
+    ]),
+    lint_mode = "warn",
+    mode = "check",
+)
+
+nogo(
+    name = "my_nogo",
+    vet = True,
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["blelistener.go"],
+    importpath = "github.com/p2004a/gbcsdpd/pkg/blelistener",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/backoff:go_default_library",
+        "@com_github_godbus_dbus_v5//:go_default_library",
+    ],
+)

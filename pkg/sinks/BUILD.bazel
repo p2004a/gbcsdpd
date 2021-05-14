@@ -1,0 +1,36 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "gcp_sink.go",
+        "mqtt_sink.go",
+        "ratelimiter.go",
+        "sinks.go",
+        "stdout_sink.go",
+    ],
+    importpath = "github.com/p2004a/gbcsdpd/pkg/sinks",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//api:go_default_library",
+        "//pkg/backoff:go_default_library",
+        "//pkg/config:go_default_library",
+        "@com_github_dgrijalva_jwt_go//:go_default_library",
+        "@com_github_eclipse_paho_mqtt_golang//:go_default_library",
+        "@com_github_golang_protobuf//jsonpb:go_default_library_gen",
+        "@com_github_golang_protobuf//proto:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["mqtt_sink_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//api:go_default_library",
+        "//pkg/config:go_default_library",
+        "@com_github_eclipse_paho_mqtt_golang//:go_default_library",
+        "@com_github_fhmq_hmq//broker:go_default_library",
+        "@com_github_google_go_cmp//cmp:go_default_library",
+    ],
+)

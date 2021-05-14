@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["ruuviparse.go"],
+    importpath = "github.com/p2004a/gbcsdpd/pkg/ruuviparse",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["ruuviparse_test.go"],
+    embed = [":go_default_library"],
+)

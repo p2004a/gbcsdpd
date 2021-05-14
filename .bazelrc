@@ -1,0 +1,2 @@
+build --define registry=nonexisting.example.com
+build --define project=nonexisting

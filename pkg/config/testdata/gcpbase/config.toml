@@ -1,0 +1,6 @@
+[[sinks.gcp]]
+project = "project2"
+region = "asia-east1"
+registry = "registry2"
+device = "device2"
+key = "key.pem"

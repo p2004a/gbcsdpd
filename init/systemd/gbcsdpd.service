@@ -1,0 +1,12 @@
+[Unit]
+Description=gbcsdpd Daemon
+After=network-online.target
+Requires=network-online.target
+After=bluetooth.target
+Requires=bluetooth.target
+
+[Service]
+ExecStart=/usr/local/bin/gbcsdpd -config /usr/local/etc/gbcsdpd/config.toml -logtime false
+
+[Install]
+WantedBy=multi-user.target

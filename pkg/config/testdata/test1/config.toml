@@ -1,0 +1,34 @@
+adapter = "hci1"
+
+[[sinks.stdout]]
+name = "stdout sink 1"
+rate_limit.max_1_in = "90s"
+
+[[sinks.mqtt]]
+name = "mqtt sink 1"
+rate_limit.max_1_in = "5s"
+topic = "/measurements"
+client_id = "my-pusher"
+username = "alibaba"
+password = "open sesame"
+format = "JSON"
+server_name = "localhost"
+enable_tls = false
+
+[[sinks.gcp]]
+name = "gcp sink 1"
+rate_limit.max_1_in = "60s"
+project = "project1"
+region = "europe-west1"
+registry = "registry1"
+device = "device1"
+key = "key.pem"
+server_name = "test.gcp.com"
+server_port = 9999
+tls.ca_certs = "myCa.pem"
+tls.skip_verify = true
+tls.server_name = "tls_overriden.gcp.com"
+
+[[sinks.stdout]]
+name = "stdout sink 2"
+rate_limit.max_1_in = "10s"

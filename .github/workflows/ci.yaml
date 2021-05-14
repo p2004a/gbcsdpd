@@ -1,0 +1,73 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: ci
+on: [push, pull_request]
+jobs:
+  build-test-bazel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache bazel
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/bazelisk
+            ~/.cache/bazel
+          key: bazel-${{ runner.os }}-${{ hashFiles('WORKSPACE', 'repositories.bzl') }}
+      - name: Check formating
+        run: bazel run @go_sdk//:bin/gofmt -- -d . && [ -z "$(bazel run --ui_event_filters=-DEBUG,-INFO --noshow_progress @go_sdk//:bin/gofmt -- -l .)" ]
+      - name: Check go mod synced
+        # go mod download needed because it's run from update-repos and can change go.sum because of https://github.com/golang/go/issues/45332.
+        run: bazel run @go_sdk//:bin/go mod tidy && bazel run @go_sdk//:bin/go mod download && [ -z "$(git status --porcelain)" ]
+      - name: Check go deps synced
+        run: bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune && [ -z "$(git status --porcelain)" ]
+      - name: Check gazelle synced
+        run: bazel run //:gazelle -- update -mode diff
+      - name: Check proto go code synced
+        run: ./scripts/regen_go_proto.sh -t
+      - name: Build
+        run: bazel build //...
+      - name: Test
+        run: bazel test //...
+  build-test-stdgo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.0'
+      - name: Build
+        run: go build ./...
+      - name: Test
+        run: go test ./... -v
+  check-terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.15.x
+      - name: Format
+        run: terraform -chdir=infra fmt -check
+      - name: Init
+        run: terraform -chdir=infra init -backend=false
+      - name: Validate
+        run: terraform -chdir=infra validate -no-color

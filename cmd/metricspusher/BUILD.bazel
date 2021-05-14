@@ -1,0 +1,53 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+load("@io_bazel_rules_docker//go:image.bzl", "go_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_push")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/p2004a/gbcsdpd/cmd/metricspusher",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//api:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_google_cloud_go//monitoring/apiv3:go_default_library",
+        "@go_googleapis//google/api:metric_go_proto",
+        "@go_googleapis//google/api:monitoredres_go_proto",
+        "@go_googleapis//google/monitoring/v3:monitoring_go_proto",
+        "@org_golang_google_grpc//codes:go_default_library",
+        "@org_golang_google_grpc//status:go_default_library",
+        "@org_golang_google_protobuf//types/known/timestamppb:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "metricspusher",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+go_image(
+    name = "metricspusher_image",
+    binary = ":metricspusher",
+    visibility = ["//visibility:public"],
+)
+
+container_push(
+    name = "push_metricspusher",
+    format = "Docker",
+    image = "metricspusher_image",
+    registry = "$(registry)",
+    repository = "$(project)/metricspusher",
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["main_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//api:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_github_google_go_cmp//cmp:go_default_library",
+        "@org_golang_google_protobuf//testing/protocmp:go_default_library",
+    ],
+)

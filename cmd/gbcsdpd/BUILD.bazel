@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/p2004a/gbcsdpd/cmd/gbcsdpd",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//api:go_default_library",
+        "//pkg/blelistener:go_default_library",
+        "//pkg/config:go_default_library",
+        "//pkg/ruuviparse:go_default_library",
+        "//pkg/sinks:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "gbcsdpd",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
