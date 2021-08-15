@@ -15,11 +15,11 @@
  */
 
 terraform {
-  required_version = ">= 0.15"
+  required_version = ">= 1"
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 3.66.1"
+      version = "~> 3.79.0"
     }
   }
 }
@@ -124,7 +124,8 @@ resource "google_monitoring_dashboard" "climate-station-dashboard" {
               "plotType" : "LINE",
               "timeSeriesQuery" : {
                 "timeSeriesQueryLanguage" : "fetch generic_node\n| metric 'custom.googleapis.com/sensor/measurement/${metric.name}'\n| map rename[sensor: resource.node_id]${local.mac_renamer}"
-              }
+              },
+              "targetAxis" : "Y1"
             }
           ],
           "timeshiftDuration" : "0s",

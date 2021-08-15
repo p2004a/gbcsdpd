@@ -14,6 +14,8 @@
 
 syntax = "proto3";
 
+option go_package = "github.com/p2004a/gbcsdpd/api;gbcsdpd_api_v1";
+
 package gbcsdpd.api.v1;
 
 message Measurement {

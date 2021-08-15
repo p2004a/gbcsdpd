@@ -29,10 +29,10 @@ jobs:
       - name: Check formating
         run: bazel run @go_sdk//:bin/gofmt -- -d . && [ -z "$(bazel run --ui_event_filters=-DEBUG,-INFO --noshow_progress @go_sdk//:bin/gofmt -- -l .)" ]
       - name: Check go mod synced
-        # go mod download needed because it's run from update-repos and can change go.sum because of https://github.com/golang/go/issues/45332.
-        run: bazel run @go_sdk//:bin/go mod tidy && bazel run @go_sdk//:bin/go mod download && [ -z "$(git status --porcelain)" ]
+        run: bazel run @go_sdk//:bin/go mod tidy && [ -z "$(git status --porcelain)" ]
       - name: Check go deps synced
-        run: bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune && [ -z "$(git status --porcelain)" ]
+        # Need additonal call to go mod tidy until https://github.com/bazelbuild/bazel-gazelle/issues/1075 lands in gazelle release.
+        run: bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune && bazel run @go_sdk//:bin/go mod tidy && [ -z "$(git status --porcelain)" ]
       - name: Check gazelle synced
         run: bazel run //:gazelle -- update -mode diff
       - name: Check proto go code synced
@@ -64,7 +64,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 0.15.x
+          terraform_version: 1.x
       - name: Format
         run: terraform -chdir=infra fmt -check
       - name: Init

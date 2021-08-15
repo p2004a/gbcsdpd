@@ -198,8 +198,8 @@ doing upgrades of infrastructure or `metricpusher` image.
 Once the one-time setup above is done and we would like to make some changes
 with Terraform from a different machine, we needs to only:
 
-1. Run `setup.sh` providing known values (or copy `terraform.tfvars` to not have
-   to retype those) to set environment variables.
+1. Source `setup.sh` providing known values (or copy `terraform.tfvars` to not have
+   to retype those) to set environment variables (remember about optional `sensors` field).
 1. Get `terraform@${PROJECT_ID}.iam.gserviceaccount.com` key into `creds.json`.
 1. Run `terraform init -backend-config="bucket=tfstate-${PROJECT_ID}"` to
    initialize Terraform.
