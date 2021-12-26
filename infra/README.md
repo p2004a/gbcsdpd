@@ -211,6 +211,6 @@ Push the new image to the container registry using the Bazel command from setup
 step 6, and then update Cloud Run service to the new latest image with:
 
 ```sh
-gcloud run deploy metricspusher --platform managed --region $REGION \
-    --image $CONTAINER_REGISTRY/$PROJECT_ID/metricspusher:latest
+gcloud --project=$PROJECT_ID run deploy metricspusher --platform managed \
+    --region $REGION --image $CONTAINER_REGISTRY/$PROJECT_ID/metricspusher:latest
 ```

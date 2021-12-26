@@ -19,7 +19,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 3.79.0"
+      version = "~> 4.5.0"
     }
   }
 }
@@ -170,8 +170,9 @@ resource "google_service_account" "metricspusher" {
 }
 
 resource "google_project_iam_member" "metricspusher-metrics-writer" {
-  role   = "roles/monitoring.metricWriter"
-  member = "serviceAccount:${google_service_account.metricspusher.email}"
+  project = var.project
+  role    = "roles/monitoring.metricWriter"
+  member  = "serviceAccount:${google_service_account.metricspusher.email}"
 }
 
 resource "google_cloud_run_service" "metricspusher-service" {

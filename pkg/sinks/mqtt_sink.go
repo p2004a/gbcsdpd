@@ -21,11 +21,11 @@ import (
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	api "github.com/p2004a/gbcsdpd/api"
 	"github.com/p2004a/gbcsdpd/pkg/backoff"
 	"github.com/p2004a/gbcsdpd/pkg/config"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 func connectMQTTClientWithBackoff(client MQTT.Client) {
@@ -86,7 +86,7 @@ func (s *MQTTSink) groupPublish(ms []*api.Measurement) {
 		}
 		s.mqttClient.Publish(s.topic, 0, false, serPub)
 	} else if s.format == config.JSON {
-		jsonPub, err := (&jsonpb.Marshaler{}).MarshalToString(pub)
+		jsonPub, err := protojson.Marshal(pub)
 		if err != nil {
 			log.Fatalf("Failed to json encode measurement: %v", err)
 		}
