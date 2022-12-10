@@ -17,7 +17,7 @@ package config
 // Represents the config file, root for unmarshaling the TOML config
 type fConfig struct {
 	// Name of the bluetooth adapter to listen for publications, eg hci0
-	Adapter string `toml:"adapter" default:"hci0"`
+	Adapter *string `toml:"adapter"` // default: hci0
 
 	// If none sinks are defined, a single default Stdout sink is created
 	Sinks fSinks `toml:"sinks"`
@@ -59,16 +59,16 @@ type fMQTTSink struct {
 	Password string `toml:"password"`
 
 	// Format of published `MeasurementsPublication` message. Can be either BINARY or JSON
-	Format string `toml:"format" default:"BINARY"`
+	Format *string `toml:"format"` // default: BINARY
 
 	// Server name to connect to
 	ServerName string `toml:"server_name"`
 
 	// Server port to connect to
-	ServerPort int `toml:"server_port" default:"8883"`
+	ServerPort *int `toml:"server_port"` // default: 8883
 
 	// Whatever to use TLS to connect to the server
-	EnableTLS bool `toml:"enable_tls" default:"true"`
+	EnableTLS *bool `toml:"enable_tls"` // default: true
 
 	// TLS configuration for connection, used when EnableTLS is true.
 	TLS fTLSConfig `toml:"tls"`
@@ -97,10 +97,10 @@ type fGCPSink struct {
 	Key string `toml:"key"`
 
 	// GCP server name to connect to
-	ServerName string `toml:"server_name" default:"mqtt.googleapis.com"`
+	ServerName *string `toml:"server_name"` // default: mqtt.googleapis.com
 
 	// GCP server port to connect to
-	ServerPort int `toml:"server_port" default:"8883"`
+	ServerPort *int `toml:"server_port"` // default: 8883
 
 	// TLS configuration for connecting to GCP
 	TLS fTLSConfig `toml:"tls"`
@@ -118,7 +118,7 @@ type fTLSConfig struct {
 	CACerts *string `toml:"ca_certs"`
 
 	// Controls if we should verify the server certificate
-	SkipVerify bool `toml:"skip_verify" default:"false"`
+	SkipVerify bool `toml:"skip_verify"` // default: false
 
 	// Allows to set the server name, by default inherits ServerName from parent
 	ServerName *string `toml:"server_name"`

@@ -14,7 +14,10 @@ Bag of things useful when working on the project.
    ```
 
    followed by running mod tidy and updating the `repositories.bzl` using
-   gazelle update-repos.
+
+   ```sh
+   bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune
+   ```
 
    The most up-to-date commands to do that are in
    [ci.yaml](../.github/workflows/ci.yaml) which verifies that all of those are

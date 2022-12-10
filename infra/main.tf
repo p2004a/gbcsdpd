@@ -19,7 +19,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.5.0"
+      version = "~> 4.45.0"
     }
   }
 }
@@ -185,6 +185,11 @@ resource "google_cloud_run_service" "metricspusher-service" {
         image = "${var.container_registry}/${var.project}/metricspusher:latest"
       }
       service_account_name = google_service_account.metricspusher.email
+    }
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/maxScale" = "2"
+      }
     }
   }
 

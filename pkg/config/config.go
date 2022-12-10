@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // Sink represents the configuration for Sink.
@@ -163,12 +163,12 @@ func parseMQTTSink(basePath string, sinkID int, sink *fMQTTSink) (*MQTTSink, err
 	res.UserName = sink.UserName
 	res.Password = sink.Password
 
-	if sink.Format == "BINARY" {
+	if sink.Format == nil || *sink.Format == "BINARY" {
 		res.Format = BINARY
-	} else if sink.Format == "JSON" {
+	} else if *sink.Format == "JSON" {
 		res.Format = JSON
 	} else {
-		return nil, fmt.Errorf("sink %s: Format have to be either BINARY or JSON, given: '%s'", res.Name, sink.Format)
+		return nil, fmt.Errorf("sink %s: Format have to be either BINARY or JSON, given: '%s'", res.Name, *sink.Format)
 	}
 
 	rateLimit, err := parseRateLimit(sink.RateLimit)
@@ -181,9 +181,13 @@ func parseMQTTSink(basePath string, sinkID int, sink *fMQTTSink) (*MQTTSink, err
 		return nil, fmt.Errorf("sink %s: server_name is a required field", sink.Name)
 	}
 	res.ServerName = sink.ServerName
-	res.ServerPort = sink.ServerPort
+	if sink.ServerPort == nil {
+		res.ServerPort = 8883
+	} else {
+		res.ServerPort = *sink.ServerPort
+	}
 
-	if sink.EnableTLS {
+	if sink.EnableTLS == nil || *sink.EnableTLS {
 		tlsConfig, err := parseTLSConfig(&sink.TLS, res.ServerName, basePath)
 		if err != nil {
 			return nil, fmt.Errorf("sink %s: Failed to parse tls config: %v", sink.Name, err)
@@ -238,8 +242,16 @@ func parseGCPSink(basePath string, sinkID int, sink *fGCPSink) (*GCPSink, error)
 	}
 	res.RateLimit = rateLimit
 
-	res.ServerName = sink.ServerName
-	res.ServerPort = sink.ServerPort
+	if sink.ServerName == nil {
+		res.ServerName = "mqtt.googleapis.com"
+	} else {
+		res.ServerName = *sink.ServerName
+	}
+	if sink.ServerPort == nil {
+		res.ServerPort = 8883
+	} else {
+		res.ServerPort = *sink.ServerPort
+	}
 
 	tlsConfig, err := parseTLSConfig(&sink.TLS, res.ServerName, basePath)
 	if err != nil {
@@ -285,7 +297,11 @@ func Read(configPath string) (*Config, error) {
 	}
 
 	config := &Config{}
-	config.Adapter = fconfig.Adapter
+	if fconfig.Adapter == nil {
+		config.Adapter = "hci0"
+	} else {
+		config.Adapter = *fconfig.Adapter
+	}
 	for i, sink := range fconfig.Sinks.MQTT {
 		mqttSink, err := parseMQTTSink(path.Dir(configPath), i, sink)
 		if err != nil {
