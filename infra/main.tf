@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Google LLC
+ * Copyright 2021-2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.45.0"
+      version = "~> 4.73.1"
     }
   }
 }
@@ -189,6 +189,9 @@ resource "google_cloud_run_service" "metricspusher-service" {
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale" = "2"
+      }
+      labels = {
+        "run.googleapis.com/startupProbeType" = "Default"
       }
     }
   }

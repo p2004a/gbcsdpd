@@ -1,2 +1,4 @@
 build --define registry=nonexisting.example.com
 build --define project=nonexisting
+build --cxxopt="--std=c++17"
+build --host_cxxopt='--std=c++17'

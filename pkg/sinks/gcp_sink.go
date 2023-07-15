@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2021-2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/p2004a/gbcsdpd/pkg/config"
 )
 
@@ -29,10 +29,10 @@ func NewGCPSink(c *config.GCPSink) (*MQTTSink, error) {
 	creds := func() (username string, password string) {
 		username = "unused"
 
-		claims := &jwt.StandardClaims{
-			Audience:  c.Project,
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(20 * time.Minute).Unix(),
+		claims := &jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{c.Project},
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(20 * time.Minute)),
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 		password, err := token.SignedString(c.Key)
