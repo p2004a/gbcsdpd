@@ -63,6 +63,27 @@ resource "google_pubsub_topic" "measurements_topic" {
   depends_on = [google_project_service.service["pubsub"]]
 }
 
+resource "google_service_account" "measurements-publisher" {
+  account_id   = "measurements-publisher"
+  display_name = "Measurements Publisher"
+  description  = "Service account used for pushing measurements via Pub/Sub"
+
+  depends_on = [google_project_service.service["iam"], google_project_service.service["pubsub"]]
+}
+
+data "google_iam_policy" "measurements_topic-policy" {
+  binding {
+    role    = "roles/pubsub.publisher"
+    members = [google_service_account.measurements-publisher.member]
+  }
+}
+
+resource "google_pubsub_topic_iam_policy" "measurements_topic-iam" {
+  project     = google_pubsub_topic.measurements_topic.project
+  topic       = google_pubsub_topic.measurements_topic.name
+  policy_data = data.google_iam_policy.measurements_topic-policy.policy_data
+}
+
 resource "google_cloudiot_registry" "sensors_registry" {
   name = "sensors"
 
@@ -172,7 +193,7 @@ resource "google_service_account" "metricspusher" {
 resource "google_project_iam_member" "metricspusher-metrics-writer" {
   project = var.project
   role    = "roles/monitoring.metricWriter"
-  member  = "serviceAccount:${google_service_account.metricspusher.email}"
+  member  = google_service_account.metricspusher.member
 }
 
 resource "google_cloud_run_service" "metricspusher-service" {
@@ -209,7 +230,7 @@ resource "google_cloud_run_service" "metricspusher-service" {
 data "google_iam_policy" "metricspusher-service-policy" {
   binding {
     role    = "roles/run.invoker"
-    members = ["serviceAccount:${google_service_account.metricspusher-invoker.email}"]
+    members = [google_service_account.metricspusher-invoker.member]
   }
 }
 

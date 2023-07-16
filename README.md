@@ -4,7 +4,8 @@
 
 gbcsdpd is a simple Go Bluetooth Climate Sensor Data Publisher Daemon: it
 listens for BLE advertisements containing measurements from Bluetooth sensors,
-parses them, and publishes via [MQTT](https://mqtt.org/) protocol.
+parses them, and publishes via [MQTT](https://mqtt.org/) protocol or directly
+to Cloud Pub/Sub.
 
 Currently, it supports only [RuuviTag](https://ruuvi.com/ruuvitag/) sensors but
 it should be easy to add support for more.

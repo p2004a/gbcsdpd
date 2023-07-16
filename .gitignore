@@ -1,3 +1,4 @@
 /*.pem
 /bazel-*
 /config.toml
+/*creds.json

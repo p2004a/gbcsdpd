@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2021-2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,10 @@ type fConfig struct {
 
 // Struct holds list of sinks for publications
 type fSinks struct {
-	MQTT   []*fMQTTSink   `toml:"mqtt"`
-	GCP    []*fGCPSink    `toml:"gcp"`
-	Stdout []*fStdoutSink `toml:"stdout"`
+	MQTT        []*fMQTTSink        `toml:"mqtt"`
+	GCP         []*fGCPSink         `toml:"gcp"`
+	CloudPubSub []*fCloudPubSubSink `toml:"cloud_pubsub"`
+	Stdout      []*fStdoutSink      `toml:"stdout"`
 }
 
 // Configruation for publishing to stdout
@@ -104,6 +105,26 @@ type fGCPSink struct {
 
 	// TLS configuration for connecting to GCP
 	TLS fTLSConfig `toml:"tls"`
+}
+
+// Configuration for publishing to Google Cloud Pub/Sub
+type fCloudPubSubSink struct {
+	// Optional name of sink
+	Name string `toml:"name"`
+
+	RateLimit *fRateLimit `toml:"rate_limit"`
+
+	// Device used to disambiguate multiple devices publishing to the same topic
+	Device string `toml:"device"`
+
+	// Project Id
+	Project *string `toml:"project"`
+
+	// Cloud Pub/Sub topic name
+	Topic string `toml:"topic"`
+
+	// Path to service account credentials file
+	Creds *string `toml:"creds"`
 }
 
 // Configuration for publishing rate limitting

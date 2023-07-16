@@ -4,20 +4,24 @@ go 1.20
 
 require (
 	cloud.google.com/go/monitoring v1.15.1
+	cloud.google.com/go/pubsub v1.32.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/fhmq/hmq v1.5.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/pelletier/go-toml/v2 v2.0.9
+	golang.org/x/oauth2 v0.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98
 	google.golang.org/grpc v1.56.2
 	google.golang.org/protobuf v1.31.0
 )
 
 require (
+	cloud.google.com/go v0.110.4 // indirect
 	cloud.google.com/go/compute v1.21.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/iam v1.1.1 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/bytedance/sonic v1.9.2 // indirect
@@ -71,7 +75,6 @@ require (
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect

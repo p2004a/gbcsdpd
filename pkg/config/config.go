@@ -15,6 +15,7 @@
 package config
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
@@ -25,8 +26,10 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pelletier/go-toml/v2"
+	"golang.org/x/oauth2/google"
 )
 
 // Sink represents the configuration for Sink.
@@ -74,6 +77,12 @@ type GCPSink struct {
 	TLSConfig                               *tls.Config
 }
 
+type CloudPubSubSink struct {
+	Name, Project, Topic, Device string
+	RateLimit                    *RateLimit
+	Creds                        *google.Credentials
+}
+
 // StdoutSink is configuration for sink.StdoutSink.
 type StdoutSink struct {
 	Name      string
@@ -81,12 +90,13 @@ type StdoutSink struct {
 }
 
 var (
-	projectIDRE, registryDeviceIDsRE, cloudIoTRegionRE, clientIDRE *regexp.Regexp
+	projectIDRE, registryDeviceIDsRE, cloudPubSubTopicRE, cloudIoTRegionRE, clientIDRE *regexp.Regexp
 )
 
 func init() {
 	projectIDRE = regexp.MustCompile(`[-a-z0-9]{6,30}`)
 	registryDeviceIDsRE = regexp.MustCompile(`[a-zA-Z][-a-zA-Z0-9._+~%]{2,254}`)
+	cloudPubSubTopicRE = regexp.MustCompile(`[a-zA-Z][-a-zA-Z0-9._+~%]{2,254}`)
 	cloudIoTRegionRE = regexp.MustCompile(`us-central1|europe-west1|asia-east1`)
 	clientIDRE = regexp.MustCompile(`[0-9a-zA-Z]{0,23}`)
 }
@@ -262,6 +272,56 @@ func parseGCPSink(basePath string, sinkID int, sink *fGCPSink) (*GCPSink, error)
 	return res, nil
 }
 
+func parseCloudPubSubSink(basePath string, sinkID int, sink *fCloudPubSubSink) (*CloudPubSubSink, error) {
+	ctx := context.Background()
+	res := &CloudPubSubSink{}
+	if sink.Name == "" {
+		res.Name = fmt.Sprintf("unnamed-cloud_pubsub-sink-%d", sinkID)
+	} else {
+		res.Name = sink.Name
+	}
+
+	if !registryDeviceIDsRE.MatchString(sink.Device) {
+		return nil, fmt.Errorf("sink %s: Device must match %s, given: '%s'", registryDeviceIDsRE.String(), res.Name, sink.Device)
+	}
+	res.Device = sink.Device
+
+	if !cloudPubSubTopicRE.MatchString(sink.Topic) {
+		return nil, fmt.Errorf("sink %s: Topic must meet requirements in https://cloud.google.com/pubsub/docs/create-topic#resource_names, given: '%s'", res.Name, sink.Topic)
+	}
+	res.Topic = sink.Topic
+
+	if sink.Creds == nil {
+		creds, err := google.FindDefaultCredentials(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("sink %s: No credentials specified, and failed to find default credentials: %v", sink.Name, err)
+		}
+		res.Creds = creds
+	} else if credsBytes, err := ioutil.ReadFile(joinPathWithAbs(basePath, *sink.Creds)); err != nil {
+		return nil, fmt.Errorf("sink %s: Failed to read '%s' creds file: %v", sink.Name, *sink.Creds, err)
+	} else if creds, err := google.CredentialsFromJSON(ctx, credsBytes, "https://www.googleapis.com/auth/pubsub"); err != nil {
+		return nil, fmt.Errorf("sink %s: Failed to parse '%s' PEM key file: %v", sink.Name, *sink.Creds, err)
+	} else {
+		res.Creds = creds
+	}
+
+	if sink.Project == nil {
+		res.Project = pubsub.DetectProjectID
+	} else if !projectIDRE.MatchString(*sink.Project) {
+		return nil, fmt.Errorf("sink %s: Project ID must meet requirements in https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin, given: '%s'", res.Name, *sink.Project)
+	} else {
+		res.Project = *sink.Project
+	}
+
+	rateLimit, err := parseRateLimit(sink.RateLimit)
+	if err != nil {
+		return nil, fmt.Errorf("sink %s: Failed to parse rate limit: %v", sink.Name, err)
+	}
+	res.RateLimit = rateLimit
+
+	return res, nil
+}
+
 func parseStdoutSink(sinkID int, sink *fStdoutSink) (*StdoutSink, error) {
 	res := &StdoutSink{}
 	if sink.Name == "" {
@@ -305,21 +365,28 @@ func Read(configPath string) (*Config, error) {
 	for i, sink := range fconfig.Sinks.MQTT {
 		mqttSink, err := parseMQTTSink(path.Dir(configPath), i, sink)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse MQTT sink conifg: %v", err)
+			return nil, fmt.Errorf("failed to parse MQTT sink config: %v", err)
 		}
 		config.Sinks = append(config.Sinks, mqttSink)
 	}
 	for i, sink := range fconfig.Sinks.GCP {
 		gcpSink, err := parseGCPSink(path.Dir(configPath), i, sink)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse GCP sink conifg: %v", err)
+			return nil, fmt.Errorf("failed to parse GCP sink config: %v", err)
 		}
 		config.Sinks = append(config.Sinks, gcpSink)
+	}
+	for i, sink := range fconfig.Sinks.CloudPubSub {
+		cloudPubSubSink, err := parseCloudPubSubSink(path.Dir(configPath), i, sink)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse Cloud Pub/Sub sink config: %v", err)
+		}
+		config.Sinks = append(config.Sinks, cloudPubSubSink)
 	}
 	for i, sink := range fconfig.Sinks.Stdout {
 		stdoutSink, err := parseStdoutSink(i, sink)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse stdout sink conifg: %v", err)
+			return nil, fmt.Errorf("failed to parse stdout sink config: %v", err)
 		}
 		config.Sinks = append(config.Sinks, stdoutSink)
 	}

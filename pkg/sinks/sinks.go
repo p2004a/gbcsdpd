@@ -31,6 +31,8 @@ func NewSink(sinkConfig config.Sink) (Sink, error) {
 	switch s := sinkConfig.(type) {
 	case *config.GCPSink:
 		return NewGCPSink(s)
+	case *config.CloudPubSubSink:
+		return NewCloudPubSubSink(s)
 	case *config.StdoutSink:
 		return NewStdoutSink(s)
 	case *config.MQTTSink:

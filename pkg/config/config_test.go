@@ -15,6 +15,7 @@
 package config
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
@@ -25,6 +26,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"golang.org/x/oauth2/google"
 )
 
 func readKey(t *testing.T, keyPath string) *rsa.PrivateKey {
@@ -51,6 +53,18 @@ func readCACerts(t *testing.T, caCertsPath string) *x509.CertPool {
 	return certpool
 }
 
+func readGoogleCredentials(t *testing.T, credsPath string) *google.Credentials {
+	credsBytes, err := ioutil.ReadFile(credsPath)
+	if err != nil {
+		t.Fatalf("Failed to load file %s: %v", credsPath, err)
+	}
+	creds, err := google.CredentialsFromJSON(context.Background(), credsBytes)
+	if err != nil {
+		t.Fatalf("Failed to parse creds file %s: %v", credsPath, err)
+	}
+	return creds
+}
+
 func caCertsTrans(cp *x509.CertPool) [][]byte {
 	if cp == nil {
 		return [][]byte{}
@@ -62,7 +76,10 @@ func cmpConfig(actual, expected *Config) string {
 	return cmp.Diff(actual, expected,
 		cmp.Transformer("CertPool", caCertsTrans),
 		cmpopts.IgnoreUnexported(tls.Config{}),
-		cmpopts.IgnoreFields(tls.Config{}, "ClientSessionCache"))
+		cmpopts.IgnoreUnexported(google.Credentials{}),
+		cmpopts.IgnoreFields(tls.Config{}, "ClientSessionCache"),
+		cmpopts.IgnoreFields(google.Credentials{}, "TokenSource"),
+	)
 }
 
 func TestParsingCorrect(t *testing.T) {
@@ -102,6 +119,14 @@ func TestParsingCorrect(t *testing.T) {
 					ServerName:         "tls_overriden.gcp.com",
 					RootCAs:            readCACerts(t, "testdata/test1/myCa.pem"),
 				},
+			},
+			&CloudPubSubSink{
+				Name:      "cloud pubsub sink 1",
+				Device:    "device2",
+				Project:   "project2",
+				Topic:     "topic1",
+				Creds:     readGoogleCredentials(t, "testdata/test1/creds.json"),
+				RateLimit: &RateLimit{Max1In: 120 * time.Second},
 			},
 			&StdoutSink{
 				Name:      "stdout sink 1",

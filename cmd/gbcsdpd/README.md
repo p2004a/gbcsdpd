@@ -54,13 +54,15 @@ and you can start `gbcsdpd` and load it: `./gbcsdpd -config config.toml`.
 The only top-level setting is the Bluetooth adapter name and the rest of the
 configuration consists of a list of sinks to push publications to. There can be
 multiple sinks of the same and different types in the same configuration. There
-are currently 3 types of sinks implemented:
+are currently 4 types of sinks implemented:
 
 - Stdout: useful for debugging, prints measurements on stdout.
 - MQTT: generic MQTT target allowing to specify username, password, topic,
   format, etc.
 - GCP: MQTT sink which implements custom authorization scheme required by Cloud
   IoT. Internally it's a simple wrapper over generic MQTT implementation.
+- Cloud Pub/Sub: sink directly pushing to Google Cloud Pub/Sub topic skipping
+  the Cloud IoT bridge.
 
 Data to MQTT servers is published as
 [gbcsdpd.api.v1.MeasurementsPublication](../../api/climate.proto) Protobuf
