@@ -16,7 +16,6 @@ package config
 
 import (
 	"context"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -27,7 +26,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/pelletier/go-toml/v2"
 	"golang.org/x/oauth2/google"
 )
@@ -67,16 +65,6 @@ type MQTTSink struct {
 	TLSConfig                                 *tls.Config
 }
 
-// GCPSink is configuration for the sink.GCPSink.
-type GCPSink struct {
-	Name, Project, Region, Registry, Device string
-	Key                                     *rsa.PrivateKey
-	RateLimit                               *RateLimit
-	ServerName                              string
-	ServerPort                              int
-	TLSConfig                               *tls.Config
-}
-
 type CloudPubSubSink struct {
 	Name, Project, Topic, Device string
 	RateLimit                    *RateLimit
@@ -90,14 +78,13 @@ type StdoutSink struct {
 }
 
 var (
-	projectIDRE, registryDeviceIDsRE, cloudPubSubTopicRE, cloudIoTRegionRE, clientIDRE *regexp.Regexp
+	projectIDRE, deviceIDsRE, cloudPubSubTopicRE, clientIDRE *regexp.Regexp
 )
 
 func init() {
 	projectIDRE = regexp.MustCompile(`[-a-z0-9]{6,30}`)
-	registryDeviceIDsRE = regexp.MustCompile(`[a-zA-Z][-a-zA-Z0-9._+~%]{2,254}`)
+	deviceIDsRE = regexp.MustCompile(`[a-zA-Z][-a-zA-Z0-9._+~%]{2,254}`)
 	cloudPubSubTopicRE = regexp.MustCompile(`[a-zA-Z][-a-zA-Z0-9._+~%]{2,254}`)
-	cloudIoTRegionRE = regexp.MustCompile(`us-central1|europe-west1|asia-east1`)
 	clientIDRE = regexp.MustCompile(`[0-9a-zA-Z]{0,23}`)
 }
 
@@ -208,70 +195,6 @@ func parseMQTTSink(basePath string, sinkID int, sink *fMQTTSink) (*MQTTSink, err
 	return res, nil
 }
 
-func parseGCPSink(basePath string, sinkID int, sink *fGCPSink) (*GCPSink, error) {
-	res := &GCPSink{}
-	if sink.Name == "" {
-		res.Name = fmt.Sprintf("unnamed-gcp-sink-%d", sinkID)
-	} else {
-		res.Name = sink.Name
-	}
-
-	if !projectIDRE.MatchString(sink.Project) {
-		return nil, fmt.Errorf("sink %s: Project ID must meet requirements in https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin, given: '%s'", res.Name, sink.Project)
-	}
-	res.Project = sink.Project
-
-	if !cloudIoTRegionRE.MatchString(sink.Region) {
-		return nil, fmt.Errorf("sink %s: Region must be one of us-central1, europe-west1, and asia-east1. See https://cloud.google.com/iot/docs/requirements#permitted_characters_and_size_requirements, given: '%s'", res.Name, sink.Region)
-	}
-	res.Region = sink.Region
-
-	if !registryDeviceIDsRE.MatchString(sink.Registry) {
-		return nil, fmt.Errorf("sink %s: Registry ID much meet requirements in https://cloud.google.com/iot/docs/requirements#permitted_characters_and_size_requirements, given: '%s'", res.Name, sink.Registry)
-	}
-	res.Registry = sink.Registry
-
-	if !registryDeviceIDsRE.MatchString(sink.Device) {
-		return nil, fmt.Errorf("sink %s: Device ID much meet requirements in https://cloud.google.com/iot/docs/requirements#permitted_characters_and_size_requirements, given: '%s'", res.Name, sink.Device)
-	}
-	res.Device = sink.Device
-
-	if sink.Key == "" {
-		return nil, fmt.Errorf("sink %s: The private key path must be specified", res.Name)
-	} else if privateKeyBytes, err := ioutil.ReadFile(joinPathWithAbs(basePath, sink.Key)); err != nil {
-		return nil, fmt.Errorf("sink %s: Failed to read '%s' key file: %v", sink.Name, sink.Key, err)
-	} else if privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes); err != nil {
-		return nil, fmt.Errorf("sink %s: Failed to parse '%s' PEM key file: %v", sink.Name, sink.Key, err)
-	} else {
-		res.Key = privateKey
-	}
-
-	rateLimit, err := parseRateLimit(sink.RateLimit)
-	if err != nil {
-		return nil, fmt.Errorf("sink %s: Failed to parse rate limit: %v", sink.Name, err)
-	}
-	res.RateLimit = rateLimit
-
-	if sink.ServerName == nil {
-		res.ServerName = "mqtt.googleapis.com"
-	} else {
-		res.ServerName = *sink.ServerName
-	}
-	if sink.ServerPort == nil {
-		res.ServerPort = 8883
-	} else {
-		res.ServerPort = *sink.ServerPort
-	}
-
-	tlsConfig, err := parseTLSConfig(&sink.TLS, res.ServerName, basePath)
-	if err != nil {
-		return nil, fmt.Errorf("sink %s: Failed to parse tls config: %v", sink.Name, err)
-	}
-	res.TLSConfig = tlsConfig
-
-	return res, nil
-}
-
 func parseCloudPubSubSink(basePath string, sinkID int, sink *fCloudPubSubSink) (*CloudPubSubSink, error) {
 	ctx := context.Background()
 	res := &CloudPubSubSink{}
@@ -281,8 +204,8 @@ func parseCloudPubSubSink(basePath string, sinkID int, sink *fCloudPubSubSink) (
 		res.Name = sink.Name
 	}
 
-	if !registryDeviceIDsRE.MatchString(sink.Device) {
-		return nil, fmt.Errorf("sink %s: Device must match %s, given: '%s'", registryDeviceIDsRE.String(), res.Name, sink.Device)
+	if !deviceIDsRE.MatchString(sink.Device) {
+		return nil, fmt.Errorf("sink %s: Device must match %s, given: '%s'", deviceIDsRE.String(), res.Name, sink.Device)
 	}
 	res.Device = sink.Device
 
@@ -368,13 +291,6 @@ func Read(configPath string) (*Config, error) {
 			return nil, fmt.Errorf("failed to parse MQTT sink config: %v", err)
 		}
 		config.Sinks = append(config.Sinks, mqttSink)
-	}
-	for i, sink := range fconfig.Sinks.GCP {
-		gcpSink, err := parseGCPSink(path.Dir(configPath), i, sink)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse GCP sink config: %v", err)
-		}
-		config.Sinks = append(config.Sinks, gcpSink)
 	}
 	for i, sink := range fconfig.Sinks.CloudPubSub {
 		cloudPubSubSink, err := parseCloudPubSubSink(path.Dir(configPath), i, sink)

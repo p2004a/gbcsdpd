@@ -26,7 +26,6 @@ type fConfig struct {
 // Struct holds list of sinks for publications
 type fSinks struct {
 	MQTT        []*fMQTTSink        `toml:"mqtt"`
-	GCP         []*fGCPSink         `toml:"gcp"`
 	CloudPubSub []*fCloudPubSubSink `toml:"cloud_pubsub"`
 	Stdout      []*fStdoutSink      `toml:"stdout"`
 }
@@ -72,38 +71,6 @@ type fMQTTSink struct {
 	EnableTLS *bool `toml:"enable_tls"` // default: true
 
 	// TLS configuration for connection, used when EnableTLS is true.
-	TLS fTLSConfig `toml:"tls"`
-}
-
-// Configruation for publishing to Google Cloud IoT Core
-type fGCPSink struct {
-	// Optional name of sink
-	Name string `toml:"name"`
-
-	RateLimit *fRateLimit `toml:"rate_limit"`
-
-	// Project Id
-	Project string `toml:"project"`
-
-	// Region to contact
-	Region string `toml:"region"`
-
-	// Device registry ID
-	Registry string `toml:"registry"`
-
-	// Device ID
-	Device string `toml:"device"`
-
-	// Path to device private key in PEM format
-	Key string `toml:"key"`
-
-	// GCP server name to connect to
-	ServerName *string `toml:"server_name"` // default: mqtt.googleapis.com
-
-	// GCP server port to connect to
-	ServerPort *int `toml:"server_port"` // default: 8883
-
-	// TLS configuration for connecting to GCP
 	TLS fTLSConfig `toml:"tls"`
 }
 

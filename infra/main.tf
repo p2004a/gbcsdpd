@@ -54,7 +54,7 @@ resource "google_storage_bucket" "tfstate_bucket" {
 }
 
 resource "google_project_service" "service" {
-  for_each = toset(["pubsub", "cloudiot", "monitoring", "iam", "run"])
+  for_each = toset(["pubsub", "monitoring", "iam", "run"])
   service  = "${each.value}.googleapis.com"
 }
 
@@ -82,25 +82,6 @@ resource "google_pubsub_topic_iam_policy" "measurements_topic-iam" {
   project     = google_pubsub_topic.measurements_topic.project
   topic       = google_pubsub_topic.measurements_topic.name
   policy_data = data.google_iam_policy.measurements_topic-policy.policy_data
-}
-
-resource "google_cloudiot_registry" "sensors_registry" {
-  name = "sensors"
-
-  event_notification_configs {
-    pubsub_topic_name = google_pubsub_topic.measurements_topic.id
-    subfolder_matches = ""
-  }
-
-  mqtt_config = {
-    mqtt_enabled_state = "MQTT_ENABLED"
-  }
-
-  http_config = {
-    http_enabled_state = "HTTP_ENABLED"
-  }
-
-  depends_on = [google_project_service.service["cloudiot"]]
 }
 
 locals {

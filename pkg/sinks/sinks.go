@@ -29,8 +29,6 @@ type Sink interface {
 // NewSink creates a new Sink objects based on the config.Sink configuration.
 func NewSink(sinkConfig config.Sink) (Sink, error) {
 	switch s := sinkConfig.(type) {
-	case *config.GCPSink:
-		return NewGCPSink(s)
 	case *config.CloudPubSubSink:
 		return NewCloudPubSubSink(s)
 	case *config.StdoutSink:

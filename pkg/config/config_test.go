@@ -16,30 +16,16 @@ package config
 
 import (
 	"context"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/oauth2/google"
 )
-
-func readKey(t *testing.T, keyPath string) *rsa.PrivateKey {
-	privateKeyBytes, err := ioutil.ReadFile(keyPath)
-	if err != nil {
-		t.Fatalf("Failed to load file %s: %v", keyPath, err)
-	}
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
-	if err != nil {
-		t.Fatalf("Failed to parse pem file %s: %v", keyPath, err)
-	}
-	return privateKey
-}
 
 func readCACerts(t *testing.T, caCertsPath string) *x509.CertPool {
 	certpool := x509.NewCertPool()
@@ -100,18 +86,6 @@ func TestParsingCorrect(t *testing.T) {
 				Format:     JSON,
 				ServerName: "localhost",
 				ServerPort: 8883,
-				TLSConfig:  nil,
-			},
-			&GCPSink{
-				Name:       "gcp sink 1",
-				Project:    "project1",
-				Region:     "europe-west1",
-				Registry:   "registry1",
-				Device:     "device1",
-				ServerName: "test.gcp.com",
-				ServerPort: 9999,
-				Key:        readKey(t, "testdata/test1/key.pem"),
-				RateLimit:  &RateLimit{Max1In: 60 * time.Second},
 				TLSConfig: &tls.Config{
 					MinVersion:         tls.VersionTLS12,
 					ClientSessionCache: tls.NewLRUClientSessionCache(10),
@@ -135,37 +109,6 @@ func TestParsingCorrect(t *testing.T) {
 			&StdoutSink{
 				Name:      "stdout sink 2",
 				RateLimit: &RateLimit{Max1In: 10 * time.Second},
-			},
-		},
-	}
-	if diff := cmpConfig(config, expectedConfig); diff != "" {
-		t.Errorf("unexpected difference:\n%v", diff)
-	}
-}
-
-func TestBaseGCP(t *testing.T) {
-	config, err := Read("testdata/gcpbase/config.toml")
-	if err != nil {
-		t.Fatalf("Failed to parse config: %v", err)
-	}
-	expectedConfig := &Config{
-		Adapter: "hci0",
-		Sinks: []Sink{
-			&GCPSink{
-				Name:       "unnamed-gcp-sink-0",
-				Project:    "project2",
-				Region:     "asia-east1",
-				Registry:   "registry2",
-				Device:     "device2",
-				ServerName: "mqtt.googleapis.com",
-				ServerPort: 8883,
-				Key:        readKey(t, "testdata/gcpbase/key.pem"),
-				TLSConfig: &tls.Config{
-					MinVersion:         tls.VersionTLS12,
-					ClientSessionCache: tls.NewLRUClientSessionCache(10),
-					InsecureSkipVerify: false,
-					ServerName:         "mqtt.googleapis.com",
-				},
 			},
 		},
 	}

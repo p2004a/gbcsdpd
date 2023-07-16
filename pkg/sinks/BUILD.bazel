@@ -4,7 +4,6 @@ go_library(
     name = "go_default_library",
     srcs = [
         "cloud_pubsub_sink.go",
-        "gcp_sink.go",
         "mqtt_sink.go",
         "ratelimiter.go",
         "sinks.go",
@@ -17,7 +16,6 @@ go_library(
         "//pkg/backoff:go_default_library",
         "//pkg/config:go_default_library",
         "@com_github_eclipse_paho_mqtt_golang//:go_default_library",
-        "@com_github_golang_jwt_jwt_v5//:go_default_library",
         "@com_google_cloud_go_pubsub//:go_default_library",
         "@org_golang_google_api//option:go_default_library",
         "@org_golang_google_protobuf//encoding/protojson:go_default_library",

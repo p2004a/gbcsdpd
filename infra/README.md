@@ -25,7 +25,6 @@ Install and configure:
 - [Bazel](https://docs.bazel.build/versions/master/install.html)
 - [gcloud](https://cloud.google.com/sdk/gcloud)
 - [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
-- [openssl cli](https://wiki.openssl.org/index.php/Command_Line_Utilities)
 
 ### Setup GCP Project
 
@@ -131,38 +130,32 @@ Install and configure:
    DEVICE_NAME=climate-publisher
    ```
 
-1. Create a key pair for authentication of the publisher with Cloud IoT.
+1. Download a service account key for `metrics-publisher` to authenticate with
+   Google Cloud Pub/Sub from the IAM page and safe it as
+   `measurements-publisher-creds.json` file.
 
    ```sh
-   openssl genpkey -algorithm RSA -out rsa_private.pem -pkeyopt rsa_keygen_bits:2048
-   openssl rsa -in rsa_private.pem -pubout -out rsa_public.pem
+   gcloud --project=$PROJECT_ID iam service-accounts keys create \
+       measurements-publisher-creds.json \
+       --iam-account=measurements-publisher@${PROJECT_ID}.iam.gserviceaccount.com
    ```
 
-1. Add the publisher as a new device to our Cloud IoT registry.
-
-   ```sh
-   gcloud --project=$PROJECT_ID iot devices create --region=$REGION --registry=sensors \
-       --public-key path=rsa_public.pem,type=rsa-pem $DEVICE_NAME
-   ```
-
-1. Append following GCP sink configuration to your `config.toml` daemon
+1. Append following Cloud Pub/Sub sink configuration to your `config.toml` daemon
    configuration (see [cmd/gbcsdpd](cmd/gbcsdpd) for details about daemon
    setup).
 
    ```sh
    cat <<EOF >> config.toml
-   [[sinks.gcp]]
-   project = "$PROJECT_ID"
-   region = "$REGION"
-   registry = "sensors"
+   [[sinks.cloud_pubsub]]
+   topic = "measurements"
    device = "$DEVICE_NAME"
-   key = "rsa_private.pem"
+   creds = "measurements-publisher-creds.json"
    rate_limit.max_1_in = "2m"
    EOF
    ```
 
-   Don't forget to keep the generated `rsa_private.pem` next to the
-   `config.toml` file.
+   Don't forget to keep the generated creds file next to the `config.toml`
+   file.
 
 ### Finish configuring monitoring dashboard
 

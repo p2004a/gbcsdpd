@@ -2,8 +2,8 @@
 
 gbcsdpd daemon is a single go binary with a single configuration file that
 listens for sensors BLE Advertisements via BlueZ D-Bus API and publishes them to
-configured sinks. MQTT sink is the main sink, but there is also useful for
-debugging stdout sink.
+configured sinks. MQTT sink is the main sink, but there is also Cloud Pub/Sub and
+a useful for debugging stdout sink.
 
 ## Building
 
@@ -54,15 +54,12 @@ and you can start `gbcsdpd` and load it: `./gbcsdpd -config config.toml`.
 The only top-level setting is the Bluetooth adapter name and the rest of the
 configuration consists of a list of sinks to push publications to. There can be
 multiple sinks of the same and different types in the same configuration. There
-are currently 4 types of sinks implemented:
+are currently 3 types of sinks implemented:
 
 - Stdout: useful for debugging, prints measurements on stdout.
 - MQTT: generic MQTT target allowing to specify username, password, topic,
   format, etc.
-- GCP: MQTT sink which implements custom authorization scheme required by Cloud
-  IoT. Internally it's a simple wrapper over generic MQTT implementation.
-- Cloud Pub/Sub: sink directly pushing to Google Cloud Pub/Sub topic skipping
-  the Cloud IoT bridge.
+- Cloud Pub/Sub: sink pushing to Google Cloud Pub/Sub topic.
 
 Data to MQTT servers is published as
 [gbcsdpd.api.v1.MeasurementsPublication](../../api/climate.proto) Protobuf
