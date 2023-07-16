@@ -17,5 +17,7 @@ go_library(
 go_binary(
     name = "gbcsdpd",
     embed = [":go_default_library"],
+    pure = "on",
+    static = "on",
     visibility = ["//visibility:public"],
 )
