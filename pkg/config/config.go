@@ -137,6 +137,9 @@ func parseTLSConfig(config *fTLSConfig, defaultServerName string, basePath strin
 }
 
 func parseMQTTSink(basePath string, sinkID int, sink *fMQTTSink) (*MQTTSink, error) {
+	if sink == nil {
+		sink = &fMQTTSink{}
+	}
 	res := &MQTTSink{}
 	if sink.Name == "" {
 		res.Name = fmt.Sprintf("unnamed-mqtt-sink-%d", sinkID)
@@ -196,6 +199,9 @@ func parseMQTTSink(basePath string, sinkID int, sink *fMQTTSink) (*MQTTSink, err
 }
 
 func parseCloudPubSubSink(basePath string, sinkID int, sink *fCloudPubSubSink) (*CloudPubSubSink, error) {
+	if sink == nil {
+		sink = &fCloudPubSubSink{}
+	}
 	ctx := context.Background()
 	res := &CloudPubSubSink{}
 	if sink.Name == "" {
@@ -246,6 +252,9 @@ func parseCloudPubSubSink(basePath string, sinkID int, sink *fCloudPubSubSink) (
 }
 
 func parseStdoutSink(sinkID int, sink *fStdoutSink) (*StdoutSink, error) {
+	if sink == nil {
+		sink = &fStdoutSink{}
+	}
 	res := &StdoutSink{}
 	if sink.Name == "" {
 		res.Name = fmt.Sprintf("unnamed-stdout-sink-%d", sinkID)

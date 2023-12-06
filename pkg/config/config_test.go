@@ -134,3 +134,21 @@ func TestParsingEmpty(t *testing.T) {
 		t.Errorf("unexpected difference:\n%v", diff)
 	}
 }
+
+func TestParsingEmptySink(t *testing.T) {
+	config, err := Read("testdata/test2/config.toml")
+	if err != nil {
+		t.Fatalf("Failed to parse config: %v", err)
+	}
+	expectedConfig := &Config{
+		Adapter: "hci0",
+		Sinks: []Sink{
+			&StdoutSink{
+				Name: "unnamed-stdout-sink-0",
+			},
+		},
+	}
+	if diff := cmpConfig(config, expectedConfig); diff != "" {
+		t.Errorf("unexpected difference:\n%v", diff)
+	}
+}
