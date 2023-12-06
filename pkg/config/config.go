@@ -20,6 +20,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"path"
 	"regexp"
 	"strings"
@@ -35,8 +36,9 @@ type Sink interface{}
 
 // Config contains the full parsed configuration for the application.
 type Config struct {
-	Adapter string
-	Sinks   []Sink
+	Adapter         string
+	Sinks           []Sink
+	SensorAllowlist []net.HardwareAddr
 }
 
 // RateLimit is configruation for the rate limiting of sinks.
@@ -293,6 +295,13 @@ func Read(configPath string) (*Config, error) {
 		config.Adapter = "hci0"
 	} else {
 		config.Adapter = *fconfig.Adapter
+	}
+	for _, address := range fconfig.SensorAllowlist {
+		hwAddr, err := net.ParseMAC(address)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse entry in sensor allow list: %v", err)
+		}
+		config.SensorAllowlist = append(config.SensorAllowlist, hwAddr)
 	}
 	for i, sink := range fconfig.Sinks.MQTT {
 		mqttSink, err := parseMQTTSink(path.Dir(configPath), i, sink)

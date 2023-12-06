@@ -1,5 +1,10 @@
 adapter = "hci1"
 
+sensor_allowlist = [
+	"FF:FF:FF:FF:FF:FF",
+	"ff:ff:ff:ff:ff:f1",
+]
+
 [[sinks.stdout]]
 name = "stdout sink 1"
 rate_limit.max_1_in = "90s"

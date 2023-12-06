@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
+	"net"
 	"testing"
 	"time"
 
@@ -111,6 +112,10 @@ func TestParsingCorrect(t *testing.T) {
 				RateLimit: &RateLimit{Max1In: 10 * time.Second},
 			},
 		},
+		SensorAllowlist: []net.HardwareAddr{
+			[]byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+			[]byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xf1},
+		},
 	}
 	if diff := cmpConfig(config, expectedConfig); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)
@@ -129,6 +134,7 @@ func TestParsingEmpty(t *testing.T) {
 				Name: "default-sink",
 			},
 		},
+		SensorAllowlist: nil,
 	}
 	if diff := cmpConfig(config, expectedConfig); diff != "" {
 		t.Errorf("unexpected difference:\n%v", diff)

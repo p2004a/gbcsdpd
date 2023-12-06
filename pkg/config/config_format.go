@@ -21,6 +21,9 @@ type fConfig struct {
 
 	// If none sinks are defined, a single default Stdout sink is created
 	Sinks fSinks `toml:"sinks"`
+
+	// Sensors MAC adresses allowlist. If emtpy, all sensors are allowed.
+	SensorAllowlist []string `toml:"sensor_allowlist"`
 }
 
 // Struct holds list of sinks for publications

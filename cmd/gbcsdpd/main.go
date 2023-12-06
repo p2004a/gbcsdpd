@@ -67,11 +67,21 @@ func main() {
 		log.Fatalf("Failed to listen for BLE advertisements: %v", err)
 	}
 
+	sensorsAllowlist := make(map[string]bool)
+	for _, addr := range conf.SensorAllowlist {
+		sensorsAllowlist[addr.String()] = true
+	}
+
 	for adv := range advListener.Advertisements() {
 		data, ok := adv.ManufacturerData[ruuviManufacturerID]
 		if !ok {
 			continue
 		}
+
+		if len(sensorsAllowlist) > 0 && !sensorsAllowlist[adv.Address.String()] {
+			continue
+		}
+
 		ruuviData, err := ruuviparse.Parse(data)
 		if err != nil {
 			log.Printf("Failed to parse ruuvi data: %v", err)
