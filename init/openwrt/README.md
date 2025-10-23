@@ -12,7 +12,7 @@
    [cmd/gbcsdpd](../../cmd/gbcsdpd). For example:
 
    ```sh
-   bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_arm //cmd/gbcsdpd
+   bazel build --platforms=@rules_go//go/toolchain:linux_arm //cmd/gbcsdpd
    ```
 
 1. Copy the binary to `/usr/bin` on the OpenWrt router.

@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Google LLC
+# Copyright 2021-2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,23 +18,22 @@ jobs:
   build-test-bazel:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Cache bazel
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/bazelisk
             ~/.cache/bazel
-          key: bazel-${{ runner.os }}-${{ hashFiles('WORKSPACE', 'repositories.bzl') }}
+          key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel.lock', 'go.sum') }}
       - name: Check formating
-        run: bazel run @go_sdk//:bin/gofmt -- -d . && [ -z "$(bazel run --ui_event_filters=-DEBUG,-INFO --noshow_progress @go_sdk//:bin/gofmt -- -l .)" ]
+        run: bazel run @rules_go//go fmt $(pwd)/... && [ -z "$(git status --porcelain)" ]
       - name: Check go mod synced
-        run: bazel run @go_sdk//:bin/go mod tidy && [ -z "$(git status --porcelain)" ]
-      - name: Check go deps synced
-        # Need additonal call to go mod tidy until https://github.com/bazelbuild/bazel-gazelle/issues/1075 lands in gazelle release.
-        run: bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune && bazel run @go_sdk//:bin/go mod tidy && [ -z "$(git status --porcelain)" ]
+        run: bazel run @rules_go//go mod tidy && [ -z "$(git status --porcelain)" ]
       - name: Check gazelle synced
         run: bazel run //:gazelle -- update -mode diff
+      - name: Check bazel mod synced
+        run: bazel mod tidy && [ -z "$(git status --porcelain)" ]
       - name: Check proto go code synced
         run: ./scripts/regen_go_proto.sh -t
       - name: Build
@@ -44,11 +43,11 @@ jobs:
   build-test-stdgo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: '^1.20.0'
+          go-version-file: 'go.mod'
       - name: Build
         run: go build ./...
       - name: Test
@@ -56,7 +55,7 @@ jobs:
   check-terraform:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:

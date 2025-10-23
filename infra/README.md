@@ -78,7 +78,7 @@ Install and configure:
 
    ```sh
    bazel run --define project=$PROJECT_ID --define registry=$CONTAINER_REGISTRY \
-       --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
+       --platforms=@rules_go//go/toolchain:linux_amd64 \
        //cmd/metricspusher:push_metricspusher
    ```
 

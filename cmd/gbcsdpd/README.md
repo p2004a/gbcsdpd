@@ -92,7 +92,7 @@ See documention at https://github.com/bazelbuild/rules_go#how-do-i-cross-compile
 For example arm+linux:
 
 ```
-bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_arm //cmd/gbcsdpd
+bazel build --platforms=@rules_go//go/toolchain:linux_arm //cmd/gbcsdpd
 ```
 
 ### Go Distribution
