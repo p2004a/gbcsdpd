@@ -85,6 +85,7 @@ func main() {
 		ruuviData, err := ruuviparse.Parse(data)
 		if err != nil {
 			log.Printf("Failed to parse ruuvi data: %v", err)
+			continue
 		}
 		measuement := &api.Measurement{
 			SensorMac:      adv.Address.String(),
