@@ -4,8 +4,12 @@ Bag of things useful when working on the project.
 
 ## Updating dependencies
 
-1. Manually go over repositories in `WORKSPACE` and update to the latest
-   versions.
+1. Manually go over bazel modules in `MODULE.bazel` and update to the latest
+   versions. Then run
+
+   ```
+   bazel mod deps --lockfile_mode=update
+   ```
 
 1. Update go deps with
 
