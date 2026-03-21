@@ -10,14 +10,23 @@ Bag of things useful when working on the project.
 1. Update go deps with
 
    ```sh
-   bazel run @go_sdk//:bin/go -- get -u all
+   bazel run @rules_go//go -- get -u ./...
    ```
 
-   followed by running mod tidy and updating the `repositories.bzl` using
+   there might be some missed when used only in test, then you can:
 
-   ```sh
-   bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=repositories.bzl%go_repositories -prune
    ```
+   bazel run @rules_go//go -- get 'github.com/fhmq/hmq@v1.5.7'
+   ```
+
+   Make sure to follow that up with
+
+   ```
+   bazel run @rules_go//go -- mod tidy
+   ```
+
+   The `use_repo` in `MODULE.bazel` is automatically updated when we use the
+   `@rules_go//go` rule.
 
    The most up-to-date commands to do that are in
    [ci.yaml](../.github/workflows/ci.yaml) which verifies that all of those are
